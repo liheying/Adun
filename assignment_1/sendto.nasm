@@ -1,5 +1,5 @@
 ; An optimised verison on the bind_shell code
-; Build with: nasm -felf64 bind_shell_lean.nasm -o tmp.o && ld tmp.o -o bind_shell_lean
+; Build with: nasm -felf64 sendto.nasm -o tmp.o && ld tmp.o -o sendto
 
 global _start
 section .text
@@ -14,16 +14,22 @@ _start:
 	xor rax, rax
 	push rax
 
+;struct sockaddr_in {
+;        ssin_familya_family_t sin_family;
+;        in_port_t sin_port;
+;        struct in_addr sin_addr;
+;        uint8_t sin_zero[8];
+;}
 ; Build a server sockaddr_in struct on the stack
 	xor rax, rax
-	push rax
-	add ax, 0x010c
+	push rax ;sin_zero
+	add ax, 0x010c ;
 	shl rax, 16
-	add ax, 0xa8c0
+	add ax, 0xa8c0 ;sin_addr
 	shl rax, 16
-	add ax, 0x2710
+	add ax, 0x2710 ;sin_port
 	shl rax, 16
-	add ax, 2
+	add ax, 2		;sin_family
 	push rax
 
 ; Create Socket	
@@ -52,10 +58,10 @@ _loop:					; send string to a socket, RSI and RDX populated before call
 	add rax, 44         ; sys_sendto  %rdi=socket, %rsi=buf, %rdx=len, %r10=0, %r8=addr, %r9=addr_len
 	syscall
 
-;	mov rax, 35           ;  sys_nanosleep
-;	lea rdi, [rbp-16]						;  sleep time
-;	lea rsi, [rbp-16]            ;  NULL or some timespc space
-;	syscall
+	mov rax, 35           ;  sys_nanosleep
+	lea rdi, [rbp-16]						;  sleep time
+	lea rsi, [rbp-16]            ;  NULL or some timespc space
+	syscall
 
 	jmp _loop	; loop send
 
