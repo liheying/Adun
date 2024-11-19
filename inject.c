@@ -116,7 +116,7 @@ void remote_jmp(pid_t pid, void *addr)
 	if (ptrace(PTRACE_GETREGS, pid, NULL, &regs) < 0)
 	{
 		logs(LOG_ERROR, "%s: %s", "ptrace GETREGS", strerror(errno));
-		exit(1);
+		return;
 	}
 
 	regs.rip = (uint64_t)addr;
@@ -124,7 +124,7 @@ void remote_jmp(pid_t pid, void *addr)
 	if (ptrace(PTRACE_SETREGS, pid, NULL, &regs) < 0)
 	{
 		logs(LOG_ERROR, "%s: %s", "ptrace SETREGS", strerror(errno));
-		exit(1);
+		return;
 	}
 }
 
@@ -298,39 +298,16 @@ int main(int argc, char *argv[])
 	logs(LOG_DEGBUG, "setting memory permissions");
 	remote_mprotect(pid, mem_addr, 4096, PROT_EXEC);
 
-	if (flags & FLAGS_DIRECT)
-	{
-		// direct shellcode execution
-		logs(LOG_DEGBUG, "redirecting execution flow to shellcode");
-		remote_jmp(pid, mem_addr);
-
-		logs(LOG_DEGBUG, "detaching");
-		if (ptrace(PTRACE_DETACH, pid, NULL, NULL) < 0)
-		{
-			logs(LOG_ERROR, "%s: %s", "ptrace DETACH", strerror(errno));
-			exit(1);
-		}
-
-		logs(LOG_DEGBUG, "done");
-		return 0;
-	}
-
 	// else prepare stack to spawn process/thread
 	logs(LOG_DEGBUG, "setting up child's stack");
 	poke_text(pid, (size_t)stack_addr, (char *)&mem_addr, sizeof(void *));
 
-	if (flags & FLAGS_PROCESS)
-	{
-		// spawn new process
-		logs(LOG_DEGBUG, "starting new process");
-		ret_pid = remote_clone(pid, CLONE_PTRACE | CLONE_VM, stack_top);
-	}
-	else
-	{
-		// spawn new thread
-		logs(LOG_DEGBUG, "starting new thread");
-		ret_pid = remote_clone(pid, CLONE_PTRACE | CLONE_SIGHAND | CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES, stack_top);
-	}
+	// spawn new thread
+	logs(LOG_DEGBUG, "starting new thread");
+	ret_pid = remote_clone(pid, CLONE_PTRACE | CLONE_SIGHAND | CLONE_THREAD | CLONE_VM | CLONE_FS | CLONE_FILES, stack_top);
+	logs(LOG_DEGBUG, "clone pid: %d", ret_pid);
+
+	sleep(1);
 
 	logs(LOG_DEGBUG, "running shellcode");
 	remote_jmp(ret_pid, mem_addr);
@@ -339,13 +316,11 @@ int main(int argc, char *argv[])
 	if (ptrace(PTRACE_DETACH, pid, NULL, NULL) < 0)
 	{
 		logs(LOG_ERROR, "%s: %s", "ptrace DETACH", strerror(errno));
-		exit(1);
 	}
 
 	if (ptrace(PTRACE_DETACH, ret_pid, NULL, NULL) < 0)
 	{
 		logs(LOG_ERROR, "%s: %s", "ptrace DETACH", strerror(errno));
-		exit(1);
 	}
 
 	logs(LOG_DEGBUG, "done");

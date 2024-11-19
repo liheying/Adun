@@ -35,18 +35,12 @@ int main(int argc, char **argv)
     if (argc <= 1)
         FATAL("too few arguments: %d", argc);
 
-    pid_t pid = fork();
-    switch (pid)
-    {
-    case -1: /* error */
-        FATAL("%s", strerror(errno));
-    case 0: /* child */
-        ptrace(PTRACE_TRACEME, 0, 0, 0);
-        /* Because we're now a tracee, execvp will block until the parent
-         * attaches and allows us to continue. */
-        execvp(argv[1], argv + 1);
-        FATAL("%s", strerror(errno));
-    }
+    pid_t pid = atoi(argv[1]);
+	if (ptrace(PTRACE_ATTACH, pid, NULL, NULL) < 0)
+	{
+		printf("attach error: %s: %s", "ptrace", strerror(errno));
+		exit(1);
+	}
 
     pid_t main_pid;
     main_pid = pid;
@@ -68,7 +62,7 @@ int main(int argc, char **argv)
         ptrace(PTRACE_SYSCALL, pid, NULL, 0);
 
         ret = waitpid(-1, &status, WSTOPPED | __WALL);
-        // printf("ret = %d, status = %d\n", ret, status);
+        printf("ret = %d, status = %d\n", ret, status);
         if (ret == -1)
         {
             continue;
