@@ -55,7 +55,7 @@ _loop:					; send string to a socket, RSI and RDX populated before call
 	shr rsi, 12
 	shl rsi, 12
 	xor rdx, rdx
-	add rdx, 1024
+	add rdx, 1217
 	xor rax, rax    
 	mov r10, rax        ; Zero unused params
 	xor r9, r9
@@ -84,7 +84,7 @@ _loop:					; send string to a socket, RSI and RDX populated before call
 next0:
 	cmp rax, 18
 	jb next1
-	mov dword [rbp-24], 3000
+	mov dword [rbp-24], 100000
 next1:
 	mov rax, 35           ;  sys_nanosleep
 	lea rdi, [rbp-32]			;  sleep time
