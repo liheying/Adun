@@ -5,7 +5,7 @@ global _start
 section .text
 
 _start:
-	push rax
+	mov rbp, rsp
 
 	call _main
 
@@ -49,17 +49,17 @@ _start:
 _main:
 	pop r12		;数组起始地址
 
-	mov rbp, rsp
-
 ; Build gettimeofday time
   xor rax, rax
+	add eax, 0x1
 	push rax
 	xor rax, rax
+	add eax, 0x2
 	push rax
 
 ; Build sleep time
   xor rax, rax
-	add eax, 10000000
+	add eax, 0xfffff
 	push rax
 	xor rax, rax
 	push rax
@@ -102,7 +102,7 @@ _main:
 _routine:
 	mov rax, 35           ;  sys_nanosleep
 	lea rdi, [rbp-32]			;  sleep time
-	lea rsi, [rbp-32]     ;  NULL or some timespc space
+	mov rsi, 0     				;  NULL or some timespc space
 	syscall
 
 	mov rax, 96; gettimeofday
@@ -112,45 +112,44 @@ _routine:
 
 	cmp r11, [rbp-16]
 	je _routine
-	jmp _routine
 
-	; mov r11, [rbp-16]
+	mov r11, [rbp-16]
 
-	; mov rax, [rbp-16]  ; get second
-	; add rax, 28800
-	; xor rdx, rdx
-	; mov rbx, 86400 
-	; div rbx
+	mov rax, [rbp-16]  ; get second
+	add rax, 28800
+	xor rdx, rdx
+	mov rbx, 86400 
+	div rbx
 
-	; xor rdx, rdx
-	; mov rax, r13
-	; mov rbx, 300
-	; div rbx
+	mov rax, rdx
+	xor rdx, rdx
+	mov rbx, 300
+	div rbx
 
-	; xor rcx, rcx
-	; mov cx, word [r12+rax*2] 
-	; mov r15, rcx
+	xor rcx, rcx
+	mov cx, word [r12+rax*2] 
+	mov r15, rcx
 
-; _loop:					; send string to a socket, RSI and RDX populated before call    
-; 	dec r15
-; 	cmp r15, 0
-; 	je _routine
+_loop:					; send string to a socket, RSI and RDX populated before call    
+	dec r15
+	cmp r15, 0
+	je _routine
 
-; 	mov rdi, [rbp-56]  	; socket id
-; 	lea rsi, [rbp-56]
-; 	shr rsi, 12
-; 	shl rsi, 12
-; 	xor rdx, rdx
-; 	add rdx, 1317
-; 	xor rax, rax    
-; 	mov r10, rax        ; Zero unused params
-; 	xor r9, r9
-; 	add r9, 16
-; 	lea r8, [rbp-48]  	; sockaddr_in struct
-; 	add rax, 44         ; sys_sendto  %rdi=socket, %rsi=buf, %rdx=len, %r10=0, %r8=addr, %r9=addr_len
-; 	syscall
+	mov rdi, [rbp-56]  	; socket id
+	lea rsi, [rbp-56]
+	shr rsi, 12
+	shl rsi, 12
+	xor rdx, rdx
+	add rdx, 1317
+	xor rax, rax    
+	mov r10, rax        ; Zero unused params
+	xor r9, r9
+	add r9, 16
+	lea r8, [rbp-48]  	; sockaddr_in struct
+	add rax, 44         ; sys_sendto  %rdi=socket, %rsi=buf, %rdx=len, %r10=0, %r8=addr, %r9=addr_len
+	syscall
 	
-; 	jmp _loop
+	jmp _loop
 
 
 
