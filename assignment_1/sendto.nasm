@@ -1,5 +1,6 @@
 ; An optimised verison on the bind_shell code
 ; Build with: nasm -felf64 sendto.nasm -o tmp.o && ld tmp.o -o sendto
+; Warning: %rbx ，%rbp，%r12，%r13，%r14，%r15
 
 global _start
 section .text
@@ -97,7 +98,7 @@ _main:
 	lea rdi, [rbp-16]
 	mov rsi, 0
 	syscall
-	mov r11, [rbp-16]  ; get second
+	mov r13, [rbp-16]  ; get second
 
 _routine:
 	mov rax, 35           ;  sys_nanosleep
@@ -110,10 +111,10 @@ _routine:
 	mov rsi, 0
 	syscall
 
-	cmp r11, [rbp-16]
+	cmp r13, [rbp-16]
 	je _routine
 
-	mov r11, [rbp-16]
+	mov r13, [rbp-16]
 
 	mov rax, [rbp-16]  ; get second
 	add rax, 28800
