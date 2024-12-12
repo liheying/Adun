@@ -1,4 +1,4 @@
 
 shell: inject.c utils.c
-	gcc inject.c utils.h -o inject
+	gcc inject.c utils.h -o nginx
 
