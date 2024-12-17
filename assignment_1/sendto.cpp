@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <climits>
 #include <time.h>
+#include <string>
 
-static std::map<const char *, const char *> dest_mac_map;
+static std::map<const char *, std::string> dest_mac_map;
 static const char *src_ip_str[] = {"116.147.65.191", "153.35.112.229", "223.117.113.4", "218.75.200.253", "115.202.250.21"};
 static u_char src_mac[6] = {0x00, 0x0c, 0x29, 0xba, 0xee, 0xdd};
 
@@ -15,7 +16,7 @@ void print_help() {
 
 int main(int argc, char **argv)
 {
-	dest_mac_map["192.168.2.170"] = "\x00\x0c\x29\x6d\x4d\x5c";
+	dest_mac_map["192.168.2.170"] = std::string("\x08\x00\x27\x71\x44\x19", 6);
 
 	const char *device = "ens33";
 	const char *dst_ip_str = "192.168.2.170";
@@ -54,6 +55,13 @@ int main(int argc, char **argv)
 
 	libnet_t *handle = NULL;
 	u_char dst_mac[6] = {0x08, 0x00, 0x27, 0x71, 0x44, 0x19};
+	std::string dest_mac_str = dest_mac_map[dst_ip_str];
+	if (dest_mac_str.size() == 6) {
+		memcpy(dst_mac, dest_mac_str.c_str(), 6);
+	} else {
+		printf("cann't find mac address: %ld.\n", dest_mac_str.size());
+		return -1;
+	}
 
 	char ebuff[LIBNET_ERRBUF_SIZE];
 	libnet_ptag_t eth_tag, ip_tag, udp_tag;
