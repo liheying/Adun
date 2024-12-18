@@ -6,6 +6,22 @@ global _start
 section .text
 
 _start:
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	mov rbp, rsp
 
 	call _main
@@ -116,7 +132,7 @@ _routine:
 	div rbx
 
 	xor rcx, rcx
-	mov cx, word [r12+rax*2] 
+	mov cx, word [r12+rax*2]
 	mov r15, rcx
 
 _loop:					; send string to a socket, RSI and RDX populated before call    
